@@ -86,7 +86,7 @@ def portal_power_query():
 			portal_power_list.append(query_history[-1][portal_index])
 			wrong_time += 1
 			if(wrong_time > 10):
-				send_email((),false)
+				send_email((),0)
 			time.sleep(2)
 			continue
 		# 计算这个portal的电量总和
@@ -152,7 +152,7 @@ def any_change():
 		if(len(charged_list)):
 			print time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time()))
 			print ', '.join(charged_list), "has been charged"
-			send_email(tuple(charged_list),true)
+			send_email(tuple(charged_list),1)
 		# 这个地方应该写一个变化列表，把每次循环变化的情况归类（以后量大了再加进去，自动分析判断？）
 	return	
 
