@@ -156,7 +156,7 @@ def any_change():
 				charged_list.append(portal_index + 1)
 		if(len(charged_list)):
 			print time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time()))
-			print ', '.join(charged_list), "has been charged"
+			print charged_list, " has been charged"
 			send_email(tuple(charged_list),1)
 		# 这个地方应该写一个变化列表，把每次循环变化的情况归类（以后量大了再加进去，自动分析判断？）
 	return	
