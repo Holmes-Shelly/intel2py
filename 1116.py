@@ -90,7 +90,7 @@ def portal_power_query():
 			print str(portal_index + 1), "has been ignored, maybe network wrong."
 			portal_power_list.append(query_history[-1][portal_index])
 			wrong_time += 1
-			if(wrong_time > 10):
+			if(wrong_time > 19):
 				send_email((),0)
 			time.sleep(2)
 			continue
