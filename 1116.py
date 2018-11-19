@@ -47,6 +47,7 @@ data['v'] = version
 portal_guid_list = [
 "b7fb26b8fb7f4dce9636fdaf270c41f1.16","499dee356bab4b9dba1dfa6ae2fc6979.16","b61f808294844cf1b70d39989b263b32.16","3372f163343e4cfe99dbcad160033160.16","d69a9ae6733e4c9487808cde64564be9.16","a0a1a02678c44d26bac39bd7c97b1a10.16","ac6f5912651948038996f3e488dea71a.16","5b355df9569d42bda75a24bb53faae64.16","c6ac5bd1f7344d9fb02ae0ea180dcb4e.16","3c76246d83034a2f93d7e0dae956e451.16","01cfc7fbd3d94050ae978ded4b3b301b.16","47297cb5f5db4a12a0b91284d8f13352.16","5da3a810471f470aa4c822f45fc032fb.11","5aad6ed3536a4966b28d044769c45819.16","7ba489836ff747d8aa28f4b375b2185f.16","f73abaa7f6d8418c958892b51472edc7.16","99f2cf56f74b4f64abaa04ea55b0503b.16","145074d91d264ddc964a26128f5d509c.16","5960a0b2b5c74181885d4265cc56a1f3.16","2ba92ce1157343e78a5796a5c1679d40.16","f32499a941c246899fa76981e58a1d74.16"
 ]
+portal_name_list = []
 
 res_power = (0, 1000, 1500, 2000, 2500, 3000, 4000, 5000, 6000)
 query_history = ()
@@ -59,6 +60,7 @@ def portal_name_output():
 		data['guid'] = portal_guid_list[portal_index]
 		post_content = req.post('https://intel.ingress.com/r/getPortalDetails', data = json.dumps(data), headers = headers)
 		portal_detail = post_content.json()['result']
+		portal_name_list.append(portal_detail)
 		# 规定输出格式
 		f.write('[')
 		f.write('{:0>2d}'.format(portal_index + 1))
@@ -151,7 +153,7 @@ def any_change():
 	if(len(query_history) > 1):
 		for portal_index in range(len(portal_guid_list)):
 			if(abs(query_history[-1][portal_index]) > abs(query_history[-2][portal_index])):
-				charged_list.append(str(portal_index + 1))	
+				charged_list.append(portal_index + 1)
 		if(len(charged_list)):
 			print time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time()))
 			print ', '.join(charged_list), "has been charged"
@@ -173,7 +175,10 @@ def send_email(msg_tuple, net_sign):
 
 	sender = 'shihao1024@163.com'
 	receivers = ['shihao1024@163.com']  # 接收邮件
-	message = MIMEText(','.join(msg_tuple), 'plain', 'utf-8')
+	content = ''
+	for index in msg_tuple:
+		content = content + str(index) + ' ' + portal_name_list[index - 1][16] + ' ' + portal_name_list[index - 1][8] + '\n'
+	message = MIMEText(content, 'plain', 'utf-8')
 	
 	if(net_sign):
 		subject = str(len(msg_tuple))+" portals are recharged"
