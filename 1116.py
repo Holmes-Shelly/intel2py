@@ -84,10 +84,10 @@ def portal_power_query():
 		try:
 			post_content = req.post('https://intel.ingress.com/r/getPortalDetails', data = json.dumps(data), headers = headers)
 			portal_detail = post_content.json()['result']
-		except OpenSSL.SSL.Error, ErrorAlert:
+		except:
 			#网络不畅，电量维持不变
 			print time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time()))
-			print str(portal_index + 1), "has been ignored, ", ErrorAlert
+			print str(portal_index + 1), "has been ignored, "
 			portal_power_list.append(query_history[-1][portal_index])
 			wrong_time += 1
 			if(wrong_time > len(portal_guid_list)-2):
