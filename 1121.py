@@ -102,7 +102,6 @@ def portal_power_query():
 		time.sleep(2)
 	# 信息储存
 	query_history += (tuple(portal_power_list),)
-	query_output()
 	# 查询变化
 	any_change()
 	return 
@@ -112,28 +111,6 @@ def query_cycle():
 	while(1):
 		portal_power_query()
 		time.sleep(1200)
-	return
-
-# 输出到txt
-def query_output():
-	f = open('prtlmsg.txt', 'a')
-	f.write(time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time())))
-	f.write('\n')
-	for portal_index in range(len(query_history[-1])):
-		f.write('[')
-		f.write('{:0>2d}'.format(portal_index + 1))
-		f.write(']')
-		if(query_history[-1][portal_index] > 0):
-			f.write('R')
-		elif(query_history[-1][portal_index] == 0):
-			f.write('N')
-		else:
-			f.write('E')
-		f.write('-')
-		f.write('{:.2f}'.format(abs(query_history[-1][portal_index]) * 100))
-		f.write('%')
-		f.write(' ')
-	f.write('\n')
 	return
 	
 # 每次查询结束后，根据上次查询结果进行比对
@@ -149,12 +126,6 @@ def any_change():
 			send_email(tuple(charged_list),1)
 		# 这个地方应该写一个变化列表，把每次循环变化的情况归类（以后量大了再加进去，自动分析判断？）
 	return	
-
-# 根据经纬度生成portal的链接
-def portal_link(lat, lon):
-	latitude = '{:.6f}'.format(lat / 1000000.0)
-	longitude = '{:.6f}'.format(lon / 1000000.0)
-	return 'https://www.ingress.com/intel?ll=' + latitude + ',' + longitude + '&z=17&pll=' + latitude + ',' + longitude
 
 def send_email(msg_tuple, net_sign):
 	# 第三方 SMTP 服务
