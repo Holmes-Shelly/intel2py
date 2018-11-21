@@ -71,7 +71,10 @@ def portal_power_query():
 	for portal_index in range(len(portal_guid_list)):
 		# 获取一个的portal信息
 		data['guid'] = portal_guid_list[portal_index]
-		post_content = req.post('https://intel.ingress.com/r/getPortalDetails', data = json.dumps(data), headers = headers)
+		try:
+		    post_content = req.post('https://intel.ingress.com/r/getPortalDetails', data = json.dumps(data), headers = headers)
+		except Exception,e:
+		    print Exception,e
 		portal_detail = post_content.json()['result']
 		# 计算这个portal的电量总和
 		portal_full_power = 0
