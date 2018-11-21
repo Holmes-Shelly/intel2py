@@ -54,22 +54,12 @@ query_history = ()
 
 # portal名字输出函数
 def portal_name_output():
-	f = open('prtlmsg.txt', 'a')
 	for portal_index in range(len(portal_guid_list)):
 		# 获取portal信息
 		data['guid'] = portal_guid_list[portal_index]
 		post_content = req.post('https://intel.ingress.com/r/getPortalDetails', data = json.dumps(data), headers = headers)
 		portal_detail = post_content.json()['result']
 		portal_name_list.append(portal_detail)
-		# 规定输出格式
-		f.write('[')
-		f.write('{:0>2d}'.format(portal_index + 1))
-		f.write(']')
-		f.write(portal_detail[8].encode('utf-8'))
-		f.write(' ')
-		f.write(portal_link(portal_detail[2], portal_detail[3]))
-		f.write('\n')
-	f.close
 	return
 
 # 电量查询函数
