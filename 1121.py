@@ -73,9 +73,10 @@ def portal_power_query():
 		data['guid'] = portal_guid_list[portal_index]
 		try:
 		    post_content = req.post('https://intel.ingress.com/r/getPortalDetails', data = json.dumps(data), headers = headers)
+		    portal_detail = post_content.json()['result']
 		except Exception,e:
 		    print Exception,e
-		portal_detail = post_content.json()['result']
+		    send_email((),0)
 		# 计算这个portal的电量总和
 		portal_full_power = 0
 		portal_decay_power = 0
@@ -134,7 +135,7 @@ def send_email(msg_tuple, net_sign):
 	message = MIMEText(content, 'plain', 'utf-8')
 	
 	if(net_sign):
-		subject = str(len(msg_tuple))+" portals are recharged"
+		subject = str(len(msg_tuple))+" portals are recharged(test)"
 	else:
 		subject = "Network wrong, please check."
 		
