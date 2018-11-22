@@ -11,18 +11,6 @@ from email.header import Header
 url = 'https://www.ingress.com/intel'
 req = requests.Session()
 
-# 从本地文件中获取cookies并加入session和header中去
-header_cookie = ''
-with open('cookies.txt', 'r') as fp:
-	intel_cookies = json.load(fp)
-	for cookie in intel_cookies:
-		req.cookies.set(cookie['name'],cookie['value'])
-		header_cookie = header_cookie + cookie['name'] + '=' + cookie['value'] + ';'
-
-# 从网页中获取version
-content_test = req.get(url).content
-version = re.findall(r'gen_dashboard_(\w*)\.js', content_test)[0]
-
 # header和data
 headers = {
 	'accept':'application/json, text/javascript, */*; q=0.01',
@@ -35,17 +23,12 @@ headers = {
 	'user-agent':'Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/68.0.3440.106 Safari/537.36',
 	'x-requested-with':'XMLHttpRequest',
 	}
-headers['cookie'] = header_cookie
-for cookie in intel_cookies:
-	if(cookie['name'] == 'csrftoken'):
-		headers['x-csrftoken'] = cookie['value']
-		break
 
-data = {'guid': "47297cb5f5db4a12a0b91284d8f13352.16"}
-data['v'] = version
+data = {}
 
+# portal相关的一些信息
 portal_guid_list = [
-"b7fb26b8fb7f4dce9636fdaf270c41f1.16","499dee356bab4b9dba1dfa6ae2fc6979.16","b61f808294844cf1b70d39989b263b32.16","3372f163343e4cfe99dbcad160033160.16","d69a9ae6733e4c9487808cde64564be9.16","a0a1a02678c44d26bac39bd7c97b1a10.16","ac6f5912651948038996f3e488dea71a.16","5b355df9569d42bda75a24bb53faae64.16","c6ac5bd1f7344d9fb02ae0ea180dcb4e.16","3c76246d83034a2f93d7e0dae956e451.16","01cfc7fbd3d94050ae978ded4b3b301b.16","47297cb5f5db4a12a0b91284d8f13352.16","5da3a810471f470aa4c822f45fc032fb.11","5aad6ed3536a4966b28d044769c45819.16","7ba489836ff747d8aa28f4b375b2185f.16","f73abaa7f6d8418c958892b51472edc7.16","99f2cf56f74b4f64abaa04ea55b0503b.16","145074d91d264ddc964a26128f5d509c.16","5960a0b2b5c74181885d4265cc56a1f3.16","2ba92ce1157343e78a5796a5c1679d40.16","f32499a941c246899fa76981e58a1d74.16"
+"b7fb26b8fb7f4dce9636fdaf270c41f1.16","499dee356bab4b9dba1dfa6ae2fc6979.16","b61f808294844cf1b70d39989b263b32.16","3372f163343e4cfe99dbcad160033160.16","d69a9ae6733e4c9487808cde64564be9.16","a0a1a02678c44d26bac39bd7c97b1a10.16","ac6f5912651948038996f3e488dea71a.16","5b355df9569d42bda75a24bb53faae64.16","c6ac5bd1f7344d9fb02ae0ea180dcb4e.16","3c76246d83034a2f93d7e0dae956e451.16","01cfc7fbd3d94050ae978ded4b3b301b.16","47297cb5f5db4a12a0b91284d8f13352.16","5da3a810471f470aa4c822f45fc032fb.11","5aad6ed3536a4966b28d044769c45819.16","f73abaa7f6d8418c958892b51472edc7.16","99f2cf56f74b4f64abaa04ea55b0503b.16","145074d91d264ddc964a26128f5d509c.16","5960a0b2b5c74181885d4265cc56a1f3.16","2ba92ce1157343e78a5796a5c1679d40.16","f32499a941c246899fa76981e58a1d74.16",
 ]
 portal_name_list = []
 
@@ -84,13 +67,13 @@ def portal_power_query():
 		try:
 			post_content = req.post('https://intel.ingress.com/r/getPortalDetails', data = json.dumps(data), headers = headers)
 			portal_detail = post_content.json()['result']
-		except:
+		except Exception, e:
 			#网络不畅，电量维持不变
 			print time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time()))
-			print str(portal_index + 1), "has been ignored, "
+			print str(portal_index + 1), "has been ignored, ", Exception, e
 			portal_power_list.append(query_history[-1][portal_index])
 			wrong_time += 1
-			if(wrong_time > len(portal_guid_list)-2):
+			if(wrong_time > len(portal_guid_list)-1):
 				send_email((),0)
 			time.sleep(2)
 			continue
@@ -117,13 +100,6 @@ def portal_power_query():
 	# 查询变化
 	any_change()
 	return 
-
-# 无限循环查询电量	
-def query_cycle():
-	while(1):
-		portal_power_query()
-		time.sleep(1200)
-	return
 
 # 输出到txt
 def query_output():
@@ -156,7 +132,7 @@ def any_change():
 				charged_list.append(portal_index + 1)
 		if(len(charged_list)):
 			print time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time()))
-			print charged_list, " has been charged"
+			print charged_list, "has been charged"
 			send_email(tuple(charged_list),1)
 		# 这个地方应该写一个变化列表，把每次循环变化的情况归类（以后量大了再加进去，自动分析判断？）
 	return	
@@ -167,6 +143,19 @@ def portal_link(lat, lon):
 	longitude = '{:.6f}'.format(lon / 1000000.0)
 	return 'https://www.ingress.com/intel?ll=' + latitude + ',' + longitude + '&z=17&pll=' + latitude + ',' + longitude
 
+def get_cookies():
+	# 从本地文件中获取cookies并加入session和header中去
+	headers['cookie'] = ''
+	with open('cookies.txt', 'r') as fp:
+		intel_cookies = json.load(fp)
+		for cookie in intel_cookies:
+			req.cookies.set(cookie['name'],cookie['value'])
+			headers['cookie'] = headers['cookie'] + cookie['name'] + '=' + cookie['value'] + ';'
+			if(cookie['name'] == 'csrftoken'):
+				headers['x-csrftoken'] = cookie['value']
+	data['v'] = re.findall(r'gen_dashboard_(\w*)\.js', req.get(url).content)[0]# 从网页中获取version
+	return
+	
 def send_email(msg_tuple, net_sign):
 	# 第三方 SMTP 服务
 	mail_host="smtp.163.com"  #设置服务器
@@ -197,6 +186,16 @@ def send_email(msg_tuple, net_sign):
 	except smtplib.SMTPException:
 		print "send unsuccessfully"
 	return
+
+# 无限循环查询电量	
+def query_cycle():
+	while(1):
+		portal_power_query()
+		time.sleep(1200)
+	return
+	
+# 浏览器初始化
+get_cookies()
 	
 # 根据guid列表输出portal名字和链接 	
 portal_name_output()
