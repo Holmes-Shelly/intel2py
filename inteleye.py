@@ -102,7 +102,7 @@ def get_cookies():
 	chrome_options = webdriver.ChromeOptions()
 	chrome_options.set_headless()
 	chrome_options.add_argument('--no-sandbox') # required when running as root user. otherwise you would get no sandbox errors. 
-	driver = webdriver.Chrome(driver_path='/usr/bin/chromedriver', chrome_options=chrome_options, service_args=['--verbose', '--log-path=/tmp/chromedriver.log'])
+	driver = webdriver.Chrome(chrome_options=chrome_options, service_args=['--verbose', '--log-path=/tmp/chromedriver.log'])
 	# options.add_argument('-headless')
 	# chrome_options.add_argument('--headless')
 	# chrome_options.add_argument('--disable-gpu')
