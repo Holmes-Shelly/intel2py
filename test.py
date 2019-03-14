@@ -4,12 +4,13 @@ import time
 url_login = 'https://accounts.google.com/ServiceLogin?service=ah&passive=true&continue=https://appengine.google.com/_ah/conflogin%3Fcontinue%3Dhttps://intel.ingress.com/intel'
 chrome_options = webdriver.ChromeOptions()
 # chrome_options.set_headless()
+chrome_options.binary_location = '/usr/bin/google-chrome'
 chrome_options.add_argument('--no-sandbox') 
 chrome_options.add_argument('--headless')
 chrome_options.add_argument('--disable-gpu')
 chrome_options.add_argument("--window-size=1920,1080")
-driver = webdriver.Chrome(chrome_options=chrome_options, service_args=['--verbose', '--log-path=/tmp/chromedriver.log'])
-# driver = webdriver.Chrome(options=chrome_options)
+# driver = webdriver.Chrome(chrome_options=chrome_options, service_args=['--verbose', '--log-path=/tmp/chromedriver.log'])
+driver = webdriver.Chrome(options=chrome_options)
 driver.get(url_login)
 
 #get the username textbox
