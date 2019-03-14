@@ -144,8 +144,8 @@ def get_cookies():
 	return
 	
 def send_tg(msg_tuple, net_sign):
-	TOKEN = "637785666:AAHRW-gz-CeKkSGbP_xKubcau0dO28ffBYc"
-	url = "https://api.telegram.org/bot{}/".format(TOKEN)
+	TOKEN = "33637785666:AAHRW-gz-CeKkSGbP_xKubcau0dO28ffBYc"
+	url = "https://api.telegram.org/bot{}/".format(TOKEN[2:])
 	content = ''
 	for index in msg_tuple:
 		content = content + str(index) + '. ' + portal_name_list[index - 1][16] + ' ' + portal_name_list[index - 1][8] + '\n'
