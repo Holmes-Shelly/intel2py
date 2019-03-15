@@ -34,20 +34,18 @@ portal_name_list = []
 res_power = (0, 1000, 1500, 2000, 2500, 3000, 4000, 5000, 6000)
 query_history = ()
 
-# portal名字输出函数
-def portal_name_output():
+# portal list initialize
+def portal_initialize():
 	for portal_index in range(len(portal_guid_list)):
 		data['guid'] = portal_guid_list[portal_index]
 		post_content = req.post('https://intel.ingress.com/r/getPortalDetails', data = json.dumps(data), headers = headers)
 		portal_detail = post_content.json()['result']
 		portal_name_list.append(portal_detail)
 		time.sleep(2)
-	send_tg(tuple(range(len(portal_name_list)+1)[1:]),1)
-	print tuple(range(len(portal_name_list)+1)[1:])
-	print range(len(portal_name_list)+1)
+	send_tg(tuple(range(len(portal_name_list)+1)[1:]))
 	return
 
-# 电量查询函数
+# power query
 def portal_power_query():
 	global query_history
 	wrong_time = 0
@@ -64,7 +62,7 @@ def portal_power_query():
 			portal_power_list.append(query_history[-1][portal_index])
 			wrong_time += 1
 			if(wrong_time > 2):
-				send_tg((),0)
+				send_tg((), "Cookies expired.")
 				get_cookies()
 			time.sleep(2)
 
@@ -88,7 +86,7 @@ def portal_power_query():
 	any_change()
 	return 
 	
-# 每次查询结束后，根据上次查询结果进行比对
+# find power changes
 def any_change():
 	charged_list = []
 	if(len(query_history) > 1):
@@ -97,8 +95,8 @@ def any_change():
 				charged_list.append(portal_index + 1)
 		if(len(charged_list)):
 			print time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time())), charged_list, "has been charged"
-			send_tg(tuple(charged_list),1)
-		# 这个地方应该写一个变化列表，把每次循环变化的情况归类（以后量大了再加进去，自动分析判断？）
+			send_tg(tuple(charged_list),'')
+		# data analyze, later work
 	return	
 
 def get_cookies():
@@ -140,28 +138,27 @@ def get_cookies():
 			headers['cookie'] = headers['cookie'] + cookie['name'] + '=' + cookie['value'] + ';'
 			if(cookie['name'] == 'csrftoken'):
 				headers['x-csrftoken'] = cookie['value']
-				print time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time())), "Csrftoken is", cookie['value']
+				print time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time())), "csrftoken:", cookie['value']
 
 	data['v'] = re.findall(r'gen_dashboard_(\w*)\.js', req.get(url).content)[0]# get version
 	return
 	
-def send_tg(msg_tuple, net_sign):
+def send_tg(msg_tuple, attention):
 	TOKEN = "33637785666:AAHRW-gz-CeKkSGbP_xKubcau0dO28ffBYc"
 	url = "https://api.telegram.org/bot{}/".format(TOKEN[2:])
-	content = ''
-	for index in msg_tuple:
-		content = content + str(index) + '. ' + portal_name_list[index - 1][16] + ' ' + portal_name_list[index - 1][8] + ' ' + portal_name_list[index - 1][1] + '\n'
-
-	if not (net_sign):
-		requests.get(url + "sendMessage?chat_id=-1001366507371&text={}".format("Cookies expired."))
+	
+	if not len(msg_tuple):
+		requests.get(url + "sendMessage?chat_id=-1001366507371&text={}".format(attention))
 	else:
+		content = ''
+		for index in msg_tuple:
+			content = content + str(index) + '. ' + portal_name_list[index - 1][1] + portal_name_list[index - 1][16] + ' ' + portal_name_list[index - 1][8] + ' ' + '\n'
 		try:
 			requests.get(url + "sendMessage?chat_id=-1001366507371&text={}".format(content.encode('utf-8')))
 		except:
 			print "send unsuccessfully"
 	return
 
-# 无限循环查询电量	
 def query_cycle():
 	cycle_time = 0
 	while(1):
@@ -172,11 +169,10 @@ def query_cycle():
 		time.sleep(1200)
 	return
 	
-# 浏览器初始化
 get_cookies()
 	
-# 根据guid列表输出portal名字和链接 	
-portal_name_output()
+# portal list initialize 	
+portal_initialize()
 
-# 开始查询	
+# begin the cycle		
 query_cycle()
