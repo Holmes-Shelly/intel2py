@@ -42,7 +42,9 @@ def portal_name_output():
 		portal_detail = post_content.json()['result']
 		portal_name_list.append(portal_detail)
 		time.sleep(2)
-	send_tg(tuple(range(len(portal_name_list))),1)
+	send_tg(tuple(range(len(portal_name_list)+1)[1:]),1)
+	print tuple(range(len(portal_name_list)+1)[1:])
+	print range(len(portal_name_list)+1)
 	return
 
 # 电量查询函数
@@ -148,7 +150,7 @@ def send_tg(msg_tuple, net_sign):
 	url = "https://api.telegram.org/bot{}/".format(TOKEN[2:])
 	content = ''
 	for index in msg_tuple:
-		content = content + str(index) + '. ' + portal_name_list[index - 1][16] + ' ' + portal_name_list[index - 1][8] + '\n'
+		content = content + str(index) + '. ' + portal_name_list[index - 1][16] + ' ' + portal_name_list[index - 1][8] + ' ' + portal_name_list[index - 1][1] + '\n'
 
 	if not (net_sign):
 		requests.get(url + "sendMessage?chat_id=-1001366507371&text={}".format("Cookies expired."))
