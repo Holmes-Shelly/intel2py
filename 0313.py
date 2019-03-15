@@ -152,7 +152,7 @@ def send_tg(msg_tuple, attention):
 	else:
 		content = ''
 		for index in msg_tuple:
-			content = content + str(index) + '. ' + portal_name_list[index - 1][1] + portal_name_list[index - 1][16] + ' ' + portal_name_list[index - 1][8] + ' ' + '\n'
+			content = content + str(index) + '. ' + portal_name_list[index - 1][1] + ' ' + portal_name_list[index - 1][16] + ' ' + portal_name_list[index - 1][8] + ' ' + '\n'
 		try:
 			requests.get(url + "sendMessage?chat_id=-1001366507371&text={}".format(content.encode('utf-8')))
 		except:
