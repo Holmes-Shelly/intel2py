@@ -42,6 +42,7 @@ def portal_name_output():
 		portal_detail = post_content.json()['result']
 		portal_name_list.append(portal_detail)
 		time.sleep(2)
+	send_tg(tuple(range(len(portal_name_list))),1)
 	return
 
 # 电量查询函数
@@ -56,15 +57,14 @@ def portal_power_query():
 			post_content = req.post('https://intel.ingress.com/r/getPortalDetails', data = json.dumps(data), headers = headers)
 			portal_detail = post_content.json()['result']
 		except Exception, e:
-			#网络不畅，电量维持不变
+			#cookies maybe expired, let the data remain unchanged
 			print time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time())), str(portal_index + 1), "has been ignored, ", Exception, e
 			portal_power_list.append(query_history[-1][portal_index])
 			wrong_time += 1
-			if(wrong_time > len(portal_guid_list)-1):
+			if(wrong_time > 2):
 				send_tg((),0)
 				get_cookies()
 			time.sleep(2)
-			continue
 
 		portal_full_power = 0
 		portal_decay_power = 0
@@ -138,7 +138,7 @@ def get_cookies():
 			headers['cookie'] = headers['cookie'] + cookie['name'] + '=' + cookie['value'] + ';'
 			if(cookie['name'] == 'csrftoken'):
 				headers['x-csrftoken'] = cookie['value']
-				print "csrftoken is", cookie['value']
+				print time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time())), "Csrftoken is", cookie['value']
 
 	data['v'] = re.findall(r'gen_dashboard_(\w*)\.js', req.get(url).content)[0]# get version
 	return
@@ -151,11 +151,10 @@ def send_tg(msg_tuple, net_sign):
 		content = content + str(index) + '. ' + portal_name_list[index - 1][16] + ' ' + portal_name_list[index - 1][8] + '\n'
 
 	if not (net_sign):
-		requests.get(url + "sendMessage?chat_id=-1001366507371&text={}".format("Network wrong, please check."))
+		requests.get(url + "sendMessage?chat_id=-1001366507371&text={}".format("Cookies expired."))
 	else:
 		try:
 			requests.get(url + "sendMessage?chat_id=-1001366507371&text={}".format(content.encode('utf-8')))
-			print "send successfully"
 		except:
 			print "send unsuccessfully"
 	return
