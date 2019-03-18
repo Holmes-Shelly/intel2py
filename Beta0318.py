@@ -68,7 +68,7 @@ def query_initialize():
 	return
 
 #update portal list
-def portal_list_update(''):
+def portal_list_update():
 	#find new portal in getentity, and attach it to portal_guid_list
 	#add and delete
 	query_initialize()
@@ -76,8 +76,8 @@ def portal_list_update(''):
 	return
 
 #receive new portal link
-def get_updates()
-	portal_list_update('')
+def get_updates():
+	portal_list_update()
 	return
 	
 # power query
