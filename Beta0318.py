@@ -34,17 +34,52 @@ portal_name_list = []
 res_power = (0, 1000, 1500, 2000, 2500, 3000, 4000, 5000, 6000)
 last_query = ()
 
-# portal list initialize
-def portal_initialize():
+#update portals' details
+def query_initialize():
+	global last_query, portal_name_list
+	portal_name_list = []
+	portal_power_list = []
 	for portal_index in range(len(portal_guid_list)):
 		data['guid'] = portal_guid_list[portal_index]
 		post_content = req.post('https://intel.ingress.com/r/getPortalDetails', data = json.dumps(data), headers = headers)
 		portal_detail = post_content.json()['result']
 		portal_name_list.append(portal_detail)
+		
+		#last_query initialize
+		portal_full_power = 0
+		portal_decay_power = 0
+		for res in portal_detail[15]:
+			portal_decay_power += res[2]
+			portal_full_power += res_power[res[1]]
+
+		if(portal_detail[1] == "R"):
+			power_percentage = round(float(portal_decay_power)/float(portal_full_power), 4)
+		elif(portal_detail[1] == "N"):
+			power_percentage = 0
+		else:
+			power_percentage = -round(float(portal_decay_power)/float(portal_full_power), 4)
+			
+		portal_power_list.append(power_percentage)
 		time.sleep(2)
+	
+	last_query = tuple(portal_power_list)
+	
 	send_tg(tuple(range(len(portal_guid_list)+1)[1:]), 'portal list update.')
 	return
 
+#update portal list
+def portal_list_update(''):
+	#find new portal in getentity, and attach it to portal_guid_list
+	#add and delete
+	query_initialize()
+
+	return
+
+#receive new portal link
+def get_updates()
+	portal_list_update('')
+	return
+	
 # power query
 def portal_power_query():
 	wrong_time = 0
@@ -80,7 +115,7 @@ def portal_power_query():
 			
 		portal_power_list.append(power_percentage)
 		time.sleep(2)
-		
+
 	any_change(tuple(portal_power_list))
 	return 
 	
@@ -88,18 +123,20 @@ def portal_power_query():
 def any_change(this_query):
 	global last_query
 	charged_list = []
-	if(len(last_query)):
-		for portal_index in range(len(portal_guid_list)):
-			if(abs(this_query[portal_index]) > abs(last_query[portal_index])):
-				charged_list.append(portal_index + 1)
-			if not((this_query[portal_index] * last_query[portal_index]) > 0):
-				portal_initialize()
-				send_tg((portal_index + 1,), 'This portal has been neutralized.')
-		if(len(charged_list)):
-			last_query = this_query
-			print time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time())), charged_list, "has been charged"
-			send_tg(tuple(charged_list),'')
-		# data analyze, later work
+	
+	for portal_index in range(len(portal_guid_list)):
+		if(abs(this_query[portal_index]) > abs(last_query[portal_index])):
+			charged_list.append(portal_index + 1)
+		if not((this_query[portal_index] * last_query[portal_index]) > 0):
+			send_tg((portal_index + 1,), 'This portal has been neutralized.')
+			query_initialize() #update portal details
+	
+	#send changes
+	if(len(charged_list)):
+		last_query = this_query
+		print time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time())), charged_list, "has been charged"
+		send_tg(tuple(charged_list),'')
+	# data analyze, later work
 	return	
 
 def get_cookies():
@@ -168,13 +205,14 @@ def query_cycle():
 		cycle_time += 1
 		if not (cycle_time % 3):
 			print time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time())), cycle_time, "times finished."
+		# get_updates()
 		time.sleep(1200)
 	return
 	
 get_cookies()
 	
 # portal list initialize 	
-portal_initialize()
+query_initialize()
 
 # begin the cycle		
 query_cycle()
