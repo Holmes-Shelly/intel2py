@@ -9,6 +9,7 @@ from selenium.webdriver.common.keys import Keys
 
 url = 'https://www.ingress.com/intel'
 url_login = 'https://accounts.google.com/ServiceLogin?service=ah&passive=true&continue=https://appengine.google.com/_ah/conflogin%3Fcontinue%3Dhttps://intel.ingress.com/intel'
+guid_pattern = r'\w{32}\.\d{2}'
 TOKEN = "33637785666:AAHRW-gz-CeKkSGbP_xKubcau0dO28ffBYc"
 url_tg = "https://api.telegram.org/bot{}/".format(TOKEN[2:])
 req = requests.Session()
@@ -75,7 +76,7 @@ def portal_list_update(new_guid):
 	#add and delete
 	if new_guid not in portal_guid_list:
 		portal_guid_list.append(new_guid)
-	query_initialize()
+		query_initialize()
 	return
 
 #receive new portal link
@@ -86,7 +87,8 @@ def get_updates():
 		tg_send((),'update failed, please try again.')
 	if((json.loads(cmd)["result"][-1]["message"]["date"] - time.time()) < 1260):
 		new_guid = json.loads(cmd)["result"][-1]["message"]["text"]
-		portal_list_update(new_guid)
+		if re.match(guid_pattern, new_guid):
+			portal_list_update(new_guid)
 	return
 	
 # power query
