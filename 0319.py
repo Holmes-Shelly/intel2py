@@ -76,6 +76,7 @@ def portal_list_update(new_guid):
 	#add and delete
 	if new_guid not in portal_guid_list:
 		portal_guid_list.append(new_guid)
+		send_tg((), 'Congratulations, your portal has been accepted.')
 		query_initialize()
 	return
 
@@ -85,6 +86,7 @@ def get_updates():
 		cmd = requests.get(url_tg + "getUpdates").content
 	except:
 		tg_send((),'update failed, please try again.')
+	print json.loads(cmd)["result"][-1]["message"]["date"] - time.time()
 	if((json.loads(cmd)["result"][-1]["message"]["date"] - time.time()) < 1260):
 		new_guid = json.loads(cmd)["result"][-1]["message"]["text"]
 		if re.match(guid_pattern, new_guid):
