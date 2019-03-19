@@ -9,6 +9,8 @@ from selenium.webdriver.common.keys import Keys
 
 url = 'https://www.ingress.com/intel'
 url_login = 'https://accounts.google.com/ServiceLogin?service=ah&passive=true&continue=https://appengine.google.com/_ah/conflogin%3Fcontinue%3Dhttps://intel.ingress.com/intel'
+TOKEN = "33637785666:AAHRW-gz-CeKkSGbP_xKubcau0dO28ffBYc"
+url_tg = "https://api.telegram.org/bot{}/".format(TOKEN[2:])
 req = requests.Session()
 
 headers = {
@@ -68,16 +70,23 @@ def query_initialize():
 	return
 
 #update portal list
-def portal_list_update():
+def portal_list_update(new_guid):
 	#find new portal in getentity, and attach it to portal_guid_list
 	#add and delete
+	if new_guid not in portal_guid_list:
+		portal_guid_list.append(new_guid)
 	query_initialize()
-
 	return
 
 #receive new portal link
 def get_updates():
-	portal_list_update()
+	try:
+		cmd = requests.get(url_tg + "getUpdates").content
+	except:
+		tg_send((),'update failed, please try again.')
+	if((json.loads(cmd)["result"][-1]["message"]["date"] - time.time()) < 1260):
+		new_guid = json.loads(cmd)["result"][-1]["message"]["text"]
+		portal_list_update(new_guid)
 	return
 	
 # power query
@@ -188,17 +197,14 @@ def get_cookies():
 	send_tg((), "Cookies updated.")
 	return
 	
-def send_tg(portal_tuple, attention):
-	TOKEN = "33637785666:AAHRW-gz-CeKkSGbP_xKubcau0dO28ffBYc"
-	url = "https://api.telegram.org/bot{}/".format(TOKEN[2:])
-	
+def send_tg(portal_tuple, attention):	
 	content = ''
 	for index in portal_tuple:
 		content = content + str(index) + '. ' + portal_name_list[index - 1][1] + ' ' + portal_name_list[index - 1][16] + ' ' + portal_name_list[index - 1][8] + ' ' + '\n'
 	try:
 		if(len(attention)):
-			requests.get(url + "sendMessage?chat_id=-393700256&text={}".format(attention))
-		requests.get(url + "sendMessage?chat_id=-393700256&text={}".format(content.encode('utf-8')))
+			requests.get(url_tg + "sendMessage?chat_id=-393700256&text={}".format(attention))
+		requests.get(url_tg + "sendMessage?chat_id=-393700256&text={}".format(content.encode('utf-8')))
 	except:
 		print "send unsuccessfully"
 	return
@@ -206,12 +212,13 @@ def send_tg(portal_tuple, attention):
 def query_cycle():
 	cycle_time = 0
 	while(1):
+		time.sleep(1200)
 		portal_power_query()
 		cycle_time += 1
 		if not (cycle_time % 3):
 			print time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time())), cycle_time, "times finished."
-		# get_updates()
-		time.sleep(1200)
+		get_updates()
+	
 	return
 	
 get_cookies()
