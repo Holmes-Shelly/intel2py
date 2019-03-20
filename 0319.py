@@ -86,7 +86,7 @@ def get_updates():
 		cmd = requests.get(url_tg + "getUpdates").content
 	except:
 		tg_send((),'update failed, please try again.')
-	print json.loads(cmd)["result"][-1]["message"]["date"] - time.time()
+	# print json.loads(cmd)["result"][-1]["message"]["date"] - time.time()
 	if((json.loads(cmd)["result"][-1]["message"]["date"] - time.time()) < 1260):
 		new_guid = json.loads(cmd)["result"][-1]["message"]["text"]
 		if re.match(guid_pattern, new_guid):
