@@ -4,6 +4,7 @@ import sys
 import json
 import re
 import time
+import numpy
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
 
@@ -40,6 +41,7 @@ last_query = ()
 #update portals' details
 def query_initialize():
 	global last_query, portal_name_list
+
 	portal_name_list = []
 	portal_power_list = []
 	for portal_index in range(len(portal_guid_list)):
@@ -70,12 +72,17 @@ def query_initialize():
 	send_tg(tuple(range(len(portal_guid_list)+1)[1:]), 'portal list update:')
 	return
 
+def save_guid()
+	numpy.save('guid_list.npy', portal_guid_list)
+	return
+	
 #update portal list
 def portal_list_update(new_guid):
 	#find new portal in getentity, and attach it to portal_guid_list
 	#add and delete
 	if new_guid not in portal_guid_list:
 		portal_guid_list.append(new_guid)
+		save_guid()
 		send_tg((), 'Congratulations, your portal has been accepted.')
 		query_initialize()
 	return
@@ -227,7 +234,8 @@ def query_cycle():
 	
 get_cookies()
 	
-# portal list initialize 	
+# portal list initialize 
+# portal_guid_list = numpy.load('guid_list.npy')
 query_initialize()
 
 # begin the cycle		
