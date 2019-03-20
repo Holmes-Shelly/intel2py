@@ -77,7 +77,6 @@ def portal_list_update(new_guid):
 	if new_guid not in portal_guid_list:
 		portal_guid_list.append(new_guid)
 		save_guid()
-		send_tg((), 'Congratulations, your portal has been accepted.')
 		query_initialize()
 	return
 
@@ -91,7 +90,10 @@ def get_updates():
 	if(rece_cmd[-1]["message"]["date"] - time.time()) < 1260):
 		new_guid = rece_cmd[-1]["message"]["text"]
 		if re.match(guid_pattern, new_guid):
+			send_tg((), 'Congratulations, your portal has been accepted.')
 			portal_list_update(new_guid)
+		else:
+			send_tg((), 'Sorry, your application has been rejected.')
 	return
 	
 # power query
