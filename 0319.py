@@ -84,12 +84,12 @@ def portal_list_update(new_guid):
 #receive new portal link
 def get_updates():
 	try:
-		cmd = requests.get(url_tg + "getUpdates").content
+		rece_cmd = requests.get(url_tg + "getUpdates").json()["result"]
 	except:
 		tg_send((),'update failed, please try again.')
-	# print json.loads(cmd)["result"][-1]["message"]["date"] - time.time()
-	if((json.loads(cmd)["result"][-1]["message"]["date"] - time.time()) < 1260):
-		new_guid = json.loads(cmd)["result"][-1]["message"]["text"]
+	# print rece_cmd[-1]["message"]["date"] - time.time()
+	if(rece_cmd[-1]["message"]["date"] - time.time()) < 1260):
+		new_guid = rece_cmd[-1]["message"]["text"]
 		if re.match(guid_pattern, new_guid):
 			portal_list_update(new_guid)
 	return
