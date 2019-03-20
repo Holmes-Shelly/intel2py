@@ -72,7 +72,7 @@ def query_initialize():
 	send_tg(tuple(range(len(portal_guid_list)+1)[1:]), 'portal list update:')
 	return
 
-def save_guid()
+def save_guid():
 	numpy.save('guid_list.npy', portal_guid_list)
 	return
 	
