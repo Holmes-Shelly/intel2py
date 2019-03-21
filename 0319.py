@@ -104,7 +104,7 @@ def get_updates():
 			portal_list_add(cmd_text[5:])
 		elif re.match(del_pattern, cmd_text):
 			send_tg((int(cmd_text[5:]), ), 'Congratulations, this portal has been deleted:')
-			portal_list_del(cmd_text[5:])
+			portal_list_del(int(cmd_text[5:]))
 		else:
 			send_tg((), 'Sorry, your application has been rejected.')
 	return
