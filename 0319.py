@@ -98,7 +98,7 @@ def get_updates():
 	cmd_time = rece_cmd[-1]["message"]["date"]
 	# print cmd_time - time.time()
 	
-	if ((cmd_time - time.time()) < 1260) and re.match(cmd_pattern, cmd_text):	
+	if ((time.time() - cmd_time) < 1260) and re.match(cmd_pattern, cmd_text):	
 		if re.match(add_pattern, cmd_text):
 			send_tg((), 'Congratulations, your portal has been accepted.')
 			portal_list_add(cmd_text[5:])
