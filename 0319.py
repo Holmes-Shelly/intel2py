@@ -91,8 +91,9 @@ def get_updates():
 	try:
 		rece_cmd = requests.get(url_tg + "getUpdates").json()["result"]
 	except:
-		tg_send((),'update failed, please try again.')
-	
+		tg_send((),'Update failed, please try it later.')
+		return
+		
 	cmd_text = rece_cmd[-1]["message"]["text"]
 	cmd_time = rece_cmd[-1]["message"]["date"]
 	# print cmd_time - time.time()
