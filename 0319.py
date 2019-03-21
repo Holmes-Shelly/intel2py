@@ -10,7 +10,9 @@ from selenium.webdriver.common.keys import Keys
 
 url = 'https://www.ingress.com/intel'
 url_login = 'https://accounts.google.com/ServiceLogin?service=ah&passive=true&continue=https://appengine.google.com/_ah/conflogin%3Fcontinue%3Dhttps://intel.ingress.com/intel'
-guid_pattern = r'\w{32}\.\d{2}'
+cmd_pattern = r'\/.*'
+add_pattern = r'\/add\s\w{32}\.\d{2}'
+del_pattern = r'\/del\s\d'
 TOKEN = "33637785666:AAHRW-gz-CeKkSGbP_xKubcau0dO28ffBYc"
 url_tg = "https://api.telegram.org/bot{}/".format(TOKEN[2:])
 req = requests.Session()
@@ -29,12 +31,12 @@ headers = {
 data = {}
 
 portal_name_list = []
-last_query = ()
+portal_power_list = []
 res_power = (0, 1000, 1500, 2000, 2500, 3000, 4000, 5000, 6000)
 
 #update portals' details
 def query_initialize():
-	global last_query, portal_name_list
+	global portal_name_list, portal_power_list
 
 	portal_name_list = []
 	portal_power_list = []
@@ -44,7 +46,7 @@ def query_initialize():
 		portal_detail = post_content.json()['result']
 		portal_name_list.append(portal_detail)
 		
-		#last_query initialize
+		#portal_power_list initialize
 		portal_full_power = 0
 		portal_decay_power = 0
 		for res in portal_detail[15]:
@@ -61,8 +63,6 @@ def query_initialize():
 		portal_power_list.append(power_percentage)
 		time.sleep(2)
 	
-	last_query = tuple(portal_power_list)
-	
 	send_tg(tuple(range(len(portal_guid_list)+1)[1:]), 'portal list update:')
 	return
 
@@ -71,27 +71,39 @@ def save_guid():
 	return
 	
 #update portal list
-def portal_list_update(new_guid):
+def portal_list_add(new_guid):
 	#find new portal in getentity, and attach it to portal_guid_list
-	#add and delete
 	if new_guid not in portal_guid_list:
 		portal_guid_list.append(new_guid)
 		save_guid()
 		query_initialize()
 	return
 
+def portal_list_del(portal_index):
+	portal_guid_list.pop(portal_index-1)
+	save_guid()
+	portal_name_list.pop(portal_index-1)
+	portal_power_list.pop(portal_index-1)
+	return
+	
 #receive new portal link
 def get_updates():
 	try:
 		rece_cmd = requests.get(url_tg + "getUpdates").json()["result"]
 	except:
 		tg_send((),'update failed, please try again.')
-	# print rece_cmd[-1]["message"]["date"] - time.time()
-	if(rece_cmd[-1]["message"]["date"] - time.time()) < 1260):
-		new_guid = rece_cmd[-1]["message"]["text"]
-		if re.match(guid_pattern, new_guid):
+	
+	cmd_text = rece_cmd[-1]["message"]["text"]
+	cmd_time = rece_cmd[-1]["message"]["date"]
+	# print cmd_time - time.time()
+	
+	if ((cmd_time - time.time()) < 1260) and re.match(cmd_pattern, cmd_text):	
+		if re.match(add_pattern, cmd_text):
 			send_tg((), 'Congratulations, your portal has been accepted.')
-			portal_list_update(new_guid)
+			portal_list_add(cmd_text[5:])
+		elif re.match(del_pattern, cmd_text):
+			send_tg((int(cmd_text[5:]), ), 'Congratulations, this portal has been deleted:')
+			portal_list_del(cmd_text[5:])
 		else:
 			send_tg((), 'Sorry, your application has been rejected.')
 	return
@@ -99,7 +111,7 @@ def get_updates():
 # power query
 def portal_power_query():
 	wrong_time = 0
-	portal_power_list = []
+	portal_power_list_new = []
 	for portal_index in range(len(portal_guid_list)):
 		data['guid'] = portal_guid_list[portal_index]
 		try:
@@ -108,7 +120,7 @@ def portal_power_query():
 		except Exception, e:
 			#cookies maybe expired, let the data remain unchanged
 			print time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time())), str(portal_index + 1), "has been ignored, ", Exception, e
-			portal_power_list.append(last_query[portal_index])
+			portal_power_list_new.append(portal_power_list[portal_index])
 			wrong_time += 1
 			if(wrong_time > 2):
 				get_cookies()
@@ -128,31 +140,32 @@ def portal_power_query():
 		else:
 			power_percentage = -round(float(portal_decay_power)/float(portal_full_power), 4)
 			
-		portal_power_list.append(power_percentage)
+		portal_power_list_new.append(power_percentage)
 		time.sleep(2)
 
-	any_change(tuple(portal_power_list))
+	any_change(tuple(portal_power_list_new))
 	return 
 	
 # find power changes
-def any_change(this_query):
-	global last_query
+def any_change(portal_power_list_new):
+	global portal_power_list
 	charged_list = []
-	neutral_find = 0
+	attack_find = 0
 	
 	for portal_index in range(len(portal_guid_list)):
-		if(abs(this_query[portal_index]) > abs(last_query[portal_index])):
+		if(abs(portal_power_list_new[portal_index]) > abs(portal_power_list[portal_index])):
 			charged_list.append(portal_index + 1)
-		if not((this_query[portal_index] * last_query[portal_index]) > 0):
-			neutral_find = 1
+		if((portal_power_list_new[portal_index] * portal_power_list[portal_index]) < 0):
+			attack_find = 1
+			send_tg((portal_index + 1,), 'This portal has been attacked:')
+		if(portal_power_list_new[portal_index] == 0):
 			send_tg((portal_index + 1,), 'This portal has been neutralized:')
-
-	if(neutral_find):
+	if(attack_find):
 		query_initialize() #update portal details
 	
 	#send changes
 	if(len(charged_list)):
-		last_query = this_query
+		portal_power_list = list(portal_power_list_new)
 		print time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time())), charged_list, "has been charged"
 		send_tg(tuple(charged_list),'Portals charged:')
 	# data analyze, later work
