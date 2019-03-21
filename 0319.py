@@ -8,59 +8,21 @@ import numpy
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
 
-url = 'https://www.ingress.com/intel'
-url_login = 'https://accounts.google.com/ServiceLogin?service=ah&passive=true&continue=https://appengine.google.com/_ah/conflogin%3Fcontinue%3Dhttps://intel.ingress.com/intel'
-cmd_pattern = r'\/.*'
-add_pattern = r'\/add\s\w{32}\.\d{2}'
-del_pattern = r'\/del\s\d'
-TOKEN = "33637785666:AAHRW-gz-CeKkSGbP_xKubcau0dO28ffBYc"
-url_tg = "https://api.telegram.org/bot{}/".format(TOKEN[2:])
-req = requests.Session()
-
-headers = {
-	'accept':'application/json, text/javascript, */*; q=0.01',
-	'accept-encoding':'gzip, deflate, br',
-	'accept-language':'en,zh;q=0.9,zh-CN;q=0.8,lb;q=0.7',
-	'content-length':'93',
-	'content-type':'application/json; charset=UTF-8',
-	'origin':'https://intel.ingress.com',
-	'referer':'https://intel.ingress.com/intel',
-	'user-agent':'Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/68.0.3440.106 Safari/537.36',
-	'x-requested-with':'XMLHttpRequest',
-	}
-data = {}
-
-portal_name_list = []
-portal_power_list = []
-res_power = (0, 1000, 1500, 2000, 2500, 3000, 4000, 5000, 6000)
-
-#update portals' details
 def query_initialize():
-	global portal_name_list, portal_power_list
-
-	portal_name_list = []
-	portal_power_list = []
+	#delete all contents in list
+	for power_index in range(len(portal_name_list)):
+		portal_name_list.pop[-1]
+		portal_power_list.pop[-1]
+	print len(portal_name_list)
+	
 	for portal_index in range(len(portal_guid_list)):
 		data['guid'] = portal_guid_list[portal_index]
 		post_content = req.post('https://intel.ingress.com/r/getPortalDetails', data = json.dumps(data), headers = headers)
 		portal_detail = post_content.json()['result']
-		portal_name_list.append(portal_detail)
 		
-		#portal_power_list initialize
-		portal_full_power = 0
-		portal_decay_power = 0
-		for res in portal_detail[15]:
-			portal_decay_power += res[2]
-			portal_full_power += res_power[res[1]]
-
-		if(portal_detail[1] == "R"):
-			power_percentage = round(float(portal_decay_power)/float(portal_full_power), 4)
-		elif(portal_detail[1] == "N"):
-			power_percentage = 0
-		else:
-			power_percentage = -round(float(portal_decay_power)/float(portal_full_power), 4)
-			
-		portal_power_list.append(power_percentage)
+		#fill up the list again
+		portal_name_list.append(portal_detail)	
+		portal_power_list.append(get_power(tuple(portal_detail)))
 		time.sleep(2)
 	
 	send_tg(tuple(range(len(portal_guid_list)+1)[1:]), 'portal list update:')
@@ -85,6 +47,22 @@ def portal_list_del(portal_index):
 	portal_name_list.pop(portal_index-1)
 	portal_power_list.pop(portal_index-1)
 	return
+
+def get_power(portal_detail):
+	portal_full_power = 0
+	portal_decay_power = 0
+	for res in portal_detail[15]:
+		portal_decay_power += res[2]
+		portal_full_power += res_power[res[1]]
+
+	if(portal_detail[1] == "R"):
+		power_percentage = round(float(portal_decay_power)/float(portal_full_power), 4)
+	elif(portal_detail[1] == "N"):
+		power_percentage = 0
+	else:
+		power_percentage = -round(float(portal_decay_power)/float(portal_full_power), 4)
+	
+	return power_percentage
 	
 #receive new portal link
 def get_updates():
@@ -127,21 +105,8 @@ def portal_power_query():
 				get_cookies()
 			time.sleep(2)
 			continue
-
-		portal_full_power = 0
-		portal_decay_power = 0
-		for res in portal_detail[15]:
-			portal_decay_power += res[2]
-			portal_full_power += res_power[res[1]]
-
-		if(portal_detail[1] == "R"):
-			power_percentage = round(float(portal_decay_power)/float(portal_full_power), 4)
-		elif(portal_detail[1] == "N"):
-			power_percentage = 0
-		else:
-			power_percentage = -round(float(portal_decay_power)/float(portal_full_power), 4)
 			
-		portal_power_list_new.append(power_percentage)
+		portal_power_list.append(get_power(tuple(portal_detail)))
 		time.sleep(2)
 
 	any_change(tuple(portal_power_list_new))
@@ -149,7 +114,6 @@ def portal_power_query():
 	
 # find power changes
 def any_change(portal_power_list_new):
-	global portal_power_list
 	charged_list = []
 	attack_find = 0
 	
@@ -166,7 +130,8 @@ def any_change(portal_power_list_new):
 	
 	#send changes
 	if(len(charged_list)):
-		portal_power_list = list(portal_power_list_new)
+		for power_index in range(len(portal_power_list)):
+			portal_power_list[power_index] = portal_power_list_new[power_index]
 		print time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time())), charged_list, "has been charged"
 		send_tg(tuple(charged_list),'Portals charged:')
 	# data analyze, later work
@@ -241,11 +206,38 @@ def query_cycle():
 		get_updates()
 	
 	return
-	
+
+req = requests.Session()	
+url = 'https://www.ingress.com/intel'
+url_login = 'https://accounts.google.com/ServiceLogin?service=ah&passive=true&continue=https://appengine.google.com/_ah/conflogin%3Fcontinue%3Dhttps://intel.ingress.com/intel'
+
+cmd_pattern = r'\/.*'
+add_pattern = r'\/add\s\w{32}\.\d{2}'
+del_pattern = r'\/del\s\d'
+
+TOKEN = "33637785666:AAHRW-gz-CeKkSGbP_xKubcau0dO28ffBYc"
+url_tg = "https://api.telegram.org/bot{}/".format(TOKEN[2:])
+
+headers = {
+	'accept':'application/json, text/javascript, */*; q=0.01',
+	'accept-encoding':'gzip, deflate, br',
+	'accept-language':'en,zh;q=0.9,zh-CN;q=0.8,lb;q=0.7',
+	'content-length':'93',
+	'content-type':'application/json; charset=UTF-8',
+	'origin':'https://intel.ingress.com',
+	'referer':'https://intel.ingress.com/intel',
+	'user-agent':'Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/68.0.3440.106 Safari/537.36',
+	'x-requested-with':'XMLHttpRequest',
+	}
+data = {}
 get_cookies()
-	
+
+res_power = (0, 1000, 1500, 2000, 2500, 3000, 4000, 5000, 6000)
+portal_name_list = []
+portal_power_list = []
 # portal list initialize 
 portal_guid_list = numpy.load('guid_list.npy').tolist()
+#update portal_name_list and portal_power_list
 query_initialize()
 
 # begin the cycle		
