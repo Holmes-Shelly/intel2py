@@ -51,6 +51,7 @@ def portal_list_del(portal_index):
 def get_power(portal_detail):
 	portal_full_power = 0
 	portal_decay_power = 0
+	print portal_detail
 	for res in portal_detail[15]:
 		portal_decay_power += res[2]
 		portal_full_power += res_power[res[1]]
@@ -61,7 +62,7 @@ def get_power(portal_detail):
 		power_percentage = 0
 	else:
 		power_percentage = -round(float(portal_decay_power)/float(portal_full_power), 4)
-	
+	print power_percentage
 	return power_percentage
 	
 #receive new portal link
