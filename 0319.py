@@ -130,8 +130,9 @@ def any_change(portal_power_list_new):
 			change_find = 1
 			send_tg((portal_index + 1,), 'This portal has been neutralized:')
 	
-	print time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time())), charged_list, "has been charged"
-	send_tg(tuple(charged_list),'Portals charged:')
+	if(len(charged_list)):
+		print time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time())), charged_list, "has been charged"
+		send_tg(tuple(charged_list),'Portals charged:')
 	
 	if(change_find):
 		query_initialize()
@@ -201,7 +202,7 @@ def send_tg(portal_tuple, attention):
 	return
 
 def query_cycle():
-	cycle_time = 0
+	cycle_time = 1
 	begin_time = time.time()
 	while(1):
 		get_updates()
