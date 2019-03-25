@@ -118,6 +118,7 @@ def any_change(portal_power_list_new):
 	attack_find = 0
 	
 	for portal_index in range(len(portal_guid_list)):
+		print portal_power_list_new, portal_power_list
 		if(abs(portal_power_list_new[portal_index]) > abs(portal_power_list[portal_index])):
 			charged_list.append(portal_index + 1)
 		if((portal_power_list_new[portal_index] * portal_power_list[portal_index]) < 0):
@@ -241,4 +242,5 @@ portal_guid_list = numpy.load('guid_list.npy').tolist()
 query_initialize()
 
 # begin the cycle		
-query_cycle()
+# query_cycle()
+portal_power_query()
