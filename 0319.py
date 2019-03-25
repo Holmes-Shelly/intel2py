@@ -13,7 +13,6 @@ def query_initialize():
 	for power_index in range(len(portal_name_list)):
 		portal_name_list.pop[-1]
 		portal_power_list.pop[-1]
-	print len(portal_name_list)
 	
 	for portal_index in range(len(portal_guid_list)):
 		data['guid'] = portal_guid_list[portal_index]
