@@ -121,7 +121,6 @@ def any_change(portal_power_list_new):
 	change_find = 0
 	
 	for portal_index in range(len(portal_guid_list)):
-		print portal_power_list_new, portal_power_list
 		if(abs(portal_power_list_new[portal_index]) > abs(portal_power_list[portal_index])):
 			charged_list.append(portal_index + 1)
 		if((portal_power_list_new[portal_index] * portal_power_list[portal_index]) < 0):
@@ -206,8 +205,8 @@ def query_cycle():
 	begin_time = time.time()
 	while(1):
 		get_updates()
-		time.sleep(10)
-		if((((time.time() - begin_time)) % 1200) > cycle_time):
+		time.sleep(6)
+		if((((time.time() - begin_time)) / 1200) > cycle_time):
 			portal_power_query()
 			cycle_time += 1
 			if not (cycle_time % 3):
