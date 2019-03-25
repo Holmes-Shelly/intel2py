@@ -67,6 +67,7 @@ def get_power(portal_detail):
 	
 #receive new portal link
 def get_updates():
+	global last_id
 	try:
 		rece_cmd = requests.get(url_tg + "getUpdates").json()["result"]
 	except:
