@@ -207,7 +207,7 @@ def query_cycle():
 	while(1):
 		get_updates()
 		time.sleep(10)
-		if((time.time() - begin_time)) > 1200:
+		if((((time.time() - begin_time)) % 1200) > cycle_time):
 			portal_power_query()
 			cycle_time += 1
 			if not (cycle_time % 3):
