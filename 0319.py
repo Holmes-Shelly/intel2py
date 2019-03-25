@@ -51,7 +51,7 @@ def portal_list_del(portal_index):
 def get_power(portal_detail):
 	portal_full_power = 0
 	portal_decay_power = 0
-	print portal_detail
+
 	for res in portal_detail[15]:
 		portal_decay_power += res[2]
 		portal_full_power += res_power[res[1]]
@@ -62,7 +62,7 @@ def get_power(portal_detail):
 		power_percentage = 0
 	else:
 		power_percentage = -round(float(portal_decay_power)/float(portal_full_power), 4)
-	print power_percentage
+
 	return power_percentage
 	
 #receive new portal link
@@ -73,9 +73,9 @@ def get_updates():
 		tg_send((),'Update failed, please try it later.')
 		return
 		
-	cmd_text = rece_cmd[-1]["message"]["text"]
+	if("text" in rece_cmd[-1]["message"]):
+		cmd_text = rece_cmd[-1]["message"]["text"]
 	cmd_time = rece_cmd[-1]["message"]["date"]
-	# print cmd_time - time.time()
 	
 	if ((time.time() - cmd_time) < 1260) and re.match(cmd_pattern, cmd_text):	
 		if re.match(add_pattern, cmd_text):
@@ -84,6 +84,8 @@ def get_updates():
 		elif re.match(del_pattern, cmd_text):
 			send_tg((int(cmd_text[5:]), ), 'Congratulations, this portal has been deleted:')
 			portal_list_del(int(cmd_text[5:]))
+		elif re.match('\/help', cmd_text):
+			send_tg((), "I'm your father.")
 		else:
 			send_tg((), 'Sorry, your application has been rejected.')
 	return
@@ -107,7 +109,7 @@ def portal_power_query():
 			time.sleep(2)
 			continue
 			
-		portal_power_list.append(get_power(tuple(portal_detail)))
+		portal_power_list_new.append(get_power(tuple(portal_detail)))
 		time.sleep(2)
 
 	any_change(tuple(portal_power_list_new))
@@ -116,27 +118,29 @@ def portal_power_query():
 # find power changes
 def any_change(portal_power_list_new):
 	charged_list = []
-	attack_find = 0
+	change_find = 0
 	
 	for portal_index in range(len(portal_guid_list)):
 		print portal_power_list_new, portal_power_list
 		if(abs(portal_power_list_new[portal_index]) > abs(portal_power_list[portal_index])):
 			charged_list.append(portal_index + 1)
 		if((portal_power_list_new[portal_index] * portal_power_list[portal_index]) < 0):
-			attack_find = 1
+			change_find = 1
 			send_tg((portal_index + 1,), 'This portal has been attacked:')
-		if(portal_power_list_new[portal_index] == 0):
+		if (portal_power_list_new[portal_index] == 0) and (portal_power_list[portal_index] != 0):
+			change_find = 1
 			send_tg((portal_index + 1,), 'This portal has been neutralized:')
-	if(attack_find):
-		query_initialize() #update portal details
 	
-	#send changes
-	if(len(charged_list)):
-		for power_index in range(len(portal_power_list)):
-			portal_power_list[power_index] = portal_power_list_new[power_index]
-		print time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time())), charged_list, "has been charged"
-		send_tg(tuple(charged_list),'Portals charged:')
-	# data analyze, later work
+	print time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time())), charged_list, "has been charged"
+	send_tg(tuple(charged_list),'Portals charged:')
+	
+	if(change_find):
+		query_initialize()
+	
+	#just like "last_tuple = this_tuple"
+	for power_index in range(len(portal_power_list)):
+		portal_power_list[power_index] = portal_power_list_new[power_index]
+
 	return	
 
 def get_cookies():
@@ -199,13 +203,16 @@ def send_tg(portal_tuple, attention):
 
 def query_cycle():
 	cycle_time = 0
+	begin_time = time.time()
 	while(1):
-		time.sleep(1200)
-		portal_power_query()
-		cycle_time += 1
-		if not (cycle_time % 3):
-			print time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time())), cycle_time, "times finished."
 		get_updates()
+		time.sleep(10)
+		if((time.time() - begin_time)) > 1200:
+			portal_power_query()
+			cycle_time += 1
+			if not (cycle_time % 3):
+				print time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time())), cycle_time, "times finished."
+		
 	
 	return
 
@@ -243,5 +250,5 @@ portal_guid_list = numpy.load('guid_list.npy').tolist()
 query_initialize()
 
 # begin the cycle		
-# query_cycle()
-portal_power_query()
+query_cycle()
+# portal_power_query()
