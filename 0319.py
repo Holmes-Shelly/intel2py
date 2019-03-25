@@ -75,16 +75,17 @@ def get_updates():
 		
 	if("text" in rece_cmd[-1]["message"]):
 		cmd_text = rece_cmd[-1]["message"]["text"]
-	cmd_time = rece_cmd[-1]["message"]["date"]
-	
-	if ((time.time() - cmd_time) < 1260) and re.match(cmd_pattern, cmd_text):	
+		cmd_id = rece_cmd[-1]["message"]["message_id"]
+		
+	if((re.match(cmd_pattern, cmd_text)) and (cmd_id != last_id)):
+		last_id = cmd_id
 		if re.match(add_pattern, cmd_text):
 			send_tg((), 'Congratulations, your portal has been accepted.')
 			portal_list_add(cmd_text[5:])
 		elif re.match(del_pattern, cmd_text):
 			send_tg((int(cmd_text[5:]), ), 'Congratulations, this portal has been deleted:')
 			portal_list_del(int(cmd_text[5:]))
-		elif re.match('\/help', cmd_text):
+		elif re.match(help_pattern, cmd_text):
 			send_tg((), "I'm your father.")
 		else:
 			send_tg((), 'Sorry, your application has been rejected.')
@@ -221,11 +222,13 @@ url = 'https://www.ingress.com/intel'
 url_login = 'https://accounts.google.com/ServiceLogin?service=ah&passive=true&continue=https://appengine.google.com/_ah/conflogin%3Fcontinue%3Dhttps://intel.ingress.com/intel'
 
 cmd_pattern = r'\/.*'
+help_pattern = r'\/help'
 add_pattern = r'\/add\s\w{32}\.\d{2}'
 del_pattern = r'\/del\s\d'
 
 TOKEN = "33637785666:AAHRW-gz-CeKkSGbP_xKubcau0dO28ffBYc"
 url_tg = "https://api.telegram.org/bot{}/".format(TOKEN[2:])
+last_id = 0
 
 headers = {
 	'accept':'application/json, text/javascript, */*; q=0.01',
