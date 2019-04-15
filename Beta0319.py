@@ -70,7 +70,7 @@ def get_updates():
 	try:
 		rece_cmd = requests.get(url_tg + "getUpdates").json()["result"]
 	except:
-		tg_send((),'Update failed, please try it later.')
+		send_tg((),'Update failed, please try it later.')
 		return
 		
 	#non text message
